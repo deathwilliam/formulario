@@ -26,17 +26,6 @@ const STEPS = [
     { id: 'impact', title: 'V. Impacto Esperado' },
 ];
 
-const TOOLS = [
-    { id: 'Cuenta Google Profesional', label: 'Cuenta Google Profesional (Correo del negocio)' },
-    { id: 'Respaldo en la Nube', label: 'Respaldo en la Nube (Drive / Photos)' },
-    { id: 'Agenda Digital', label: 'Agenda Digital (Google Calendar)' },
-    { id: 'Notas e Inventario', label: 'Notas e Inventario (Google Keep)' },
-    { id: 'Seguridad 2FA', label: 'Seguridad 2FA (Verificación en 2 pasos)' },
-    { id: 'Facebook Business', label: 'Facebook Business / Marketplace' },
-    { id: 'Instagram / TikTok', label: 'Instagram / TikTok para Negocios' },
-    { id: 'Edición de Fotos', label: 'Edición de Fotos de Productos' },
-];
-
 export const SurveyForm = () => {
     const [currentStep, setCurrentStep] = useState(0);
     const [formData, setFormData] = useState({
