@@ -14,9 +14,13 @@ import {
     AlertTriangle,
     Zap,
     Info,
-    Beaker
+    Beaker,
+    AlertCircle,
+    Loader2
 } from 'lucide-react';
 import { generatePDF, generateExcel } from '../utils/exportTools';
+
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_ChZNErVMM6s6_QMoAO6tNoealiaCFTewvCdxlIGfexwGxWjpVhqmG6NbFu5hRJ0u4g/exec';
 
 const STEPS = [
     { id: 'start', title: 'I. Información General' },
@@ -28,6 +32,8 @@ const STEPS = [
 
 export const SurveyForm = () => {
     const [currentStep, setCurrentStep] = useState(0);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitStatus, setSubmitStatus] = useState(null); // 'success', 'error'
     const [formData, setFormData] = useState({
         businessName: '',
         location: '',
@@ -317,6 +323,32 @@ export const SurveyForm = () => {
         generateExcel(finalData);
     };
 
+    const handleSubmitToSheets = async () => {
+        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'PLACEHOLDER_URL') {
+            console.warn('URL de Google Script no configurada');
+            return;
+        }
+
+        setIsSubmitting(true);
+        setSubmitStatus(null);
+
+        try {
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...formData, date: new Date().toLocaleString() }),
+            });
+            setSubmitStatus('success');
+            setTimeout(() => setSubmitStatus(null), 5000);
+        } catch (error) {
+            console.error('Error:', error);
+            setSubmitStatus('error');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
         <div className="max-w-xl mx-auto py-10 px-4 flex flex-col min-h-screen">
             <div className="mb-10">
@@ -373,6 +405,29 @@ export const SurveyForm = () => {
                                 <ArrowRight className="w-5 h-5" />
                             </button>
                         ) : (
+                            <button
+                                type="button"
+                                onClick={handleSubmitToSheets}
+                                disabled={!isCurrentStepValid() || isSubmitting}
+                                className={`btn-primary flex-[2] flex items-center justify-center gap-2 ${isSubmitting ? 'opacity-70 pointer-events-none' : ''}`}
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        Guardando...
+                                    </>
+                                ) : (
+                                    <>
+                                        Guardar en la nube
+                                        <ArrowRight className="w-5 h-5" />
+                                    </>
+                                )}
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="flex gap-4">
+                        {currentStep === STEPS.length - 1 && (
                             <div className="grid grid-cols-2 gap-3 w-full">
                                 <button
                                     type="button"
@@ -393,6 +448,20 @@ export const SurveyForm = () => {
                             </div>
                         )}
                     </div>
+
+                    {submitStatus === 'success' && (
+                        <div className="mt-4 p-4 bg-emerald-50 text-emerald-700 rounded-2xl border-2 border-emerald-100 flex items-center gap-3 animate-bounce">
+                            <CheckCircle2 className="w-6 h-6" />
+                            <p className="font-black text-xs uppercase tracking-wider">¡Éxito! Datos guardados en la nube.</p>
+                        </div>
+                    )}
+
+                    {submitStatus === 'error' && (
+                        <div className="mt-4 p-4 bg-rose-50 text-rose-700 rounded-2xl border-2 border-rose-100 flex items-center gap-3">
+                            <AlertCircle className="w-6 h-6" />
+                            <p className="font-black text-xs uppercase tracking-wider">Error al conectar con la base de datos.</p>
+                        </div>
+                    )}
                 </div>
             </div>
 
